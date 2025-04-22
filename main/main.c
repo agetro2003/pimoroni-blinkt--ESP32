@@ -10,6 +10,14 @@ spi_device_handle_t spi;
 
 //Almacen de los datos de los leds
 uint32_t leds[8] = {};
+uint8_t count = 0;
+uint8_t count_bits[8];
+
+void convert_to_bits(uint8_t c, uint8_t c_b[8]){
+    for (int i = 0; i < 8; i++){
+        c_b[i] = (c >> (7-i)) & 1;
+    }
+}
 
 //Convertir RGB y Brillo
 uint32_t rgbb(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) {
@@ -133,6 +141,7 @@ void led_task(void *pvParameter) {
         leds[7] = rgb(255, 0, 0); // Rojo
         show();
         */
+       /*
        for (int i = 0; i < 8; i++) {
             set_pixel(i, 255, 0, 0); // Rojo
         }
@@ -140,22 +149,36 @@ void led_task(void *pvParameter) {
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Espera 1 segundo
         clear();
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Espera 1 segundo
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 4; i++) {
             set_pixel(i, 0, 255, 0); // Verde
+        }
+        for (int i = 4; i < 6; i++) {
+            set_pixel(i, 255, 255, 255); // Verde
+        }
+        for (int i = 6; i < 8; i++) {
+            set_pixel(i, 0, 0, 0); // Verde
         }
         show();
 
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Espera 1 segundo
         clear();
         for (int i = 0; i < 8; i++) {
-            set_pixel(i, 0, 0, 255); // Azul
+            set_pixel(i, 255, 255, 0); // Azul
         }
         show();
         
 
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Espera 1 segundo
         clear();
+        */
+       convert_to_bits(count, count_bits);
+       for (int i = 0; i<8; i++){
+            printf("%d %d \n", count_bits[i], (count_bits[i]==1) );
+            (count_bits[i] == 1) ? set_pixel(i, 255, 0, 0) : set_pixel(i, 0,0,0); 
+       }
+       show();
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Espera 1 segundo
+        count++;
     }
 }
 
