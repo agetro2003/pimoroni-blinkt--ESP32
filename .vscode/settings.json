@@ -6,7 +6,8 @@
   "idf.toolsPathWin": "C:\\Users\\jesus\\.espressif",
   "files.associations": {
     "*.ejs": "html",
-    "inttypes.h": "c"
+    "inttypes.h": "c",
+    "freertos.h": "c"
   },
   "idf.portWin": "COM3",
   "idf.customExtraVars": {
