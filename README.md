@@ -1,7 +1,7 @@
 # Proyecto final. Codigo para Pimoroni Blinkt 
 ## Autores: Jesús Daniel Ortega Briceño y Paulo Antón Gómez Prieto
 
-## Configuracion necesaria antes de construir el proyecto. 
+## Configuracion en el MenuConfig necesaria antes de construir el proyecto. 
 
 * FIRMWARE_UPGRADE_URL: URL para realizar la actualizacion OTA
 
