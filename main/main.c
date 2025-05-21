@@ -20,8 +20,9 @@ extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 #define HASH_LEN 32
 #define OTA_URL_SIZE 256
 static const char *TAG = "OTA";
-int ota_flag=0;
+int ota_flag=0; // Variable para controlar la tarea OTA, 0=desactivada, 1=activada
 
+// Handler para los eventos HTTP
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
     switch (evt->event_id) {
@@ -53,7 +54,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-
+// Tarea para la actualización OTA
 void ota_task(void *pvParameter)
 {
     while (1){
@@ -125,6 +126,7 @@ void ota_task(void *pvParameter)
 }
 }
 
+// Imprime el hash SHA-256
 static void print_sha256(const uint8_t *image_hash, const char *label)
 {
     char hash_print[HASH_LEN * 2 + 1];
@@ -140,7 +142,7 @@ static void http_cleanup(esp_http_client_handle_t client)
     esp_http_client_close(client);
     esp_http_client_cleanup(client);
 }
-
+// Obtiene el hash SHA-256 de las particiones
 static void get_sha256_of_partitions(void)
 {
     uint8_t sha_256[HASH_LEN] = { 0 };
@@ -170,7 +172,7 @@ static void __attribute__((noreturn)) task_fatal_error(void)
 }
 
 
-
+// funcion de diagnostico para la actualizacion OTA
 static bool diagnostic(void)
 {
     esp_err_t err;
@@ -188,15 +190,6 @@ static bool diagnostic(void)
         .if_name = &ifr,
 #endif
     };
-
-    /*
-    esp_http_client_config_t config = {
-        .url = CONFIG_EXAMPLE_FIRMWARE_UPG_URL,
-        .cert_pem = (char *)server_cert_pem_start,
-        .timeout_ms = CONFIG_EXAMPLE_OTA_RECV_TIMEOUT,
-        .keep_alive_enable = true,
-    };
-    */
 
 #ifdef CONFIG_EXAMPLE_FIRMWARE_UPGRADE_URL_FROM_STDIN
     char url_buf[OTA_URL_SIZE];
@@ -239,11 +232,11 @@ static bool diagnostic(void)
 }
 // FIN OTA
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) // Macro para obtener el valor mínimo
 
-#define APA_SOF 0b11100000
+#define APA_SOF 0b11100000 // Cabecera de inicio de frame necesaria para enviar datos a los LEDs
 
-spi_device_handle_t spi;
+spi_device_handle_t spi; // Handler del dispositivo SPI
 
 //Almacen de los datos de los leds
 uint32_t leds[8] = {};
@@ -254,13 +247,14 @@ uint8_t count_bits[8];
 // Maximos valor de cuenta
 uint8_t maxCount = 255;
 
+// Convertir un numero a su representación binaria
 void convert_to_bits(uint8_t c, uint8_t c_b[8]){
     for (int i = 0; i < 8; i++){
         c_b[i] = (c >> (7-i)) & 1;
     }
 }
 
-//Convertir RGB y Brillo
+//Definir el color RGB y Brillo
 uint32_t rgbb(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) {
     uint32_t result = 0;
     result |= ((uint32_t)r << 24);           //rojo
@@ -270,6 +264,7 @@ uint32_t rgbb(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) {
     return result;
 }
 
+// Definir el color RGB sin brillo
 uint32_t rgb (uint8_t r, uint8_t g, uint8_t b ){
     return rgbb(r, g, b, CONFIG_DEFAULT_BRIGHTNESS);
 }
@@ -281,6 +276,7 @@ void set_pixel(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
+// Funcion para encender los LEDs
 void show(){
     // buffer para los datos
     uint8_t buffer[4 + 4 * 8 + (8 + 1) / 2];
@@ -316,7 +312,7 @@ void show(){
 
 }
 
-// Borra todos los LEDs
+// Apaga todos los LEDs
 void clear() {
     for (int i = 0; i < 8; i++) {
         leds[i] = rgb(0, 0, 0);
@@ -334,18 +330,23 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     sprintf(count_str, "%d", count);
     switch ((esp_mqtt_event_id_t)event_id) {
         case MQTT_EVENT_CONNECTED: 
+            // Topic para actualizar el maximo de cuenta
             msg_id = esp_mqtt_client_subscribe(client, "/maxCount", 0);
             printf("MQTT_EVENT_CONNECTED, msg_id=%d\n", msg_id);
 
+            // Topic para actualizar el valor de cuenta
             msg_id = esp_mqtt_client_subscribe(client, "/setCount", 0);
             printf("MQTT_EVENT_CONNECTED, msg_id=%d\n", msg_id);
 
+            // Topic para añadir al valor de cuenta
             msg_id = esp_mqtt_client_subscribe(client, "/addCount", 0);
             printf("MQTT_EVENT_CONNECTED, msg_id=%d\n", msg_id);
 
+            // Topic para comenzar la actualizacion OTA
             msg_id = esp_mqtt_client_subscribe(client, "/OTA", 0);
             printf("MQTT_EVENT_CONNECTED, msg_id=%d\n", msg_id);
             
+            // Topic para publicar el valor de cuenta
             msg_id = esp_mqtt_client_publish(client, "/currentCount", count_str, 0, 1, 0);
             printf("MQTT_EVENT_PUBLISHED, msg_id=%d\n", msg_id);
 
@@ -366,6 +367,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             break;
         case MQTT_EVENT_DATA:
             printf("MQTT_EVENT_DATA\n");
+            // Condicional para tratar el mensaje recibido para cada topic
             if (strncmp(event->topic, "/maxCount", event->topic_len)==0){
                 char data[16] = {0};
                 memcpy(data, event->data, MIN(event->data_len, sizeof(data)-1));
@@ -406,6 +408,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             }
            
             sprintf(count_str, "%d", count);
+            // Despues de recibir un mensaje, se publica el nuevo valor de cuenta
             esp_mqtt_client_publish(client, "/currentCount", count_str, 0, 1, 0);
             break;
         case MQTT_EVENT_ERROR:
@@ -414,8 +417,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         default:
         printf("Other event id: %" PRId32 "\n", event_id);
         break;
-
-
     }
 }
 
@@ -435,14 +436,13 @@ void led_task(void *pvParameter) {
         printf("LED Task Running...\n");
        convert_to_bits(count, count_bits);
         for (int i = 0; i<8; i++){
-           // printf("%d %d \n", count_bits[i], (count_bits[i]==1) );
-           // color rojo si ya se alcanzo el maximo, verde si no
+           // Si el bit es 1, se enciende el LED correspondiente
             (count_bits[i] == 1) ? 
-            
-            ((count >= maxCount) ? set_pixel(i, 255, 0, 0) : set_pixel(i, 0, 255, 0))
+            // Si ya se ha alcanzado el maximo de cuenta, se enciende el LED en rojo
+            ((count >= maxCount) ? set_pixel(i, 255, 0, 0) : set_pixel(i, 0, 0, 255))
             
             : 
-             
+             // Si el bit es 0, se apaga el LED correspondiente
              set_pixel(i, 0,0,0); 
        }
        show();
@@ -493,8 +493,7 @@ void app_main(void)
     const esp_partition_t *running = esp_ota_get_running_partition();
     esp_ota_img_states_t ota_state;
 
-//    xTaskCreate(led_task, "led_task", 2048, NULL, 1, NULL);
-   /* if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
         if (ota_state == ESP_OTA_IMG_PENDING_VERIFY){
             if(diagnostic()){
                 ESP_LOGI(TAG, "Diagnostics completed successfully! Continuing execution ...");
@@ -504,7 +503,7 @@ void app_main(void)
                 esp_ota_mark_app_invalid_rollback_and_reboot();
             }
     }    
-}*/
+}
     xTaskCreatePinnedToCore(ota_task, "ota_task", 8192, NULL, 6, NULL, 0);
     xTaskCreatePinnedToCore(led_task, "main_task", 4096, NULL, 4, NULL, 1);
 }
