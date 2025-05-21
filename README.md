@@ -1,32 +1,25 @@
-# _Sample project_
+# Proyecto final. Codigo para Pimoroni Blinkt 
+## Autores: Jesús Daniel Ortega Briceño y Paulo Antón Gómez Prieto
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## Configuracion necesaria antes de construir el proyecto. 
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+* FIRMWARE_UPGRADE_URL: URL para realizar la actualizacion OTA
 
+* BROKER_URL: URL para conectarse al broker MQTT
 
+* GPIO_MOSI: GPIO para la señal MOSI, por defecto es el 23
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+* GPIO_CLOCK: GPIO para la señal Clock, por defecto es el 18
 
-## Example folder contents
+* Partition Table: Seleccionar "Two large size OTA partitions"
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+* Activar "Allow HTTP for OTA"
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+* Flash size: seleccionar "4 MB"
 
-Below is short explanation of remaining files in the project folder.
+* Activar "Enable app rollback support"
 
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+* WiFi SSID: nombre de la red WIFI
+
+* WiFi Password: contraseña de la red WIFI
+
